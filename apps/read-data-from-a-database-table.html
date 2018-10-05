@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tutorial</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.2.1.min.js"></script>
+    </head>
+    <body>
+        <div style="padding:50px">
+            <button id=btn1>Read data from database</button>
+            <br>
+            <div id=data>
+            </div>
+        </div>
+        <script>
+            $('#btn1').on('click',function(event){
+                event.preventDefault();
+                var data={"request":"read_data_1"};
+                console.log(data);
+                $.ajax({
+                    headers:{},
+        			type: "POST",
+        			url: "http://api.rt.org.au/web/api.aspx",
+        			contentType: "application/json",
+        			charset:"utf-8",
+        			dataType: "json",
+        			error: function(jqXHR,error, errorThrown){ if(jqXHR.status) {alert(jqXHR.responseText);} else {alert("Something went wrong");}},
+        			data: JSON.stringify(data),
+        			success: function(c,textStatus, request){
+                        console.log(c);
+                        var txt="";
+                        for(var i=0;i<c.data.length;i++){
+                            var tt="";
+                            for(p in c.data[i]){
+                                if(tt!="") tt+=", ";
+                                tt+=p+":"+c.data[i][p];
+                            }
+                            txt+=tt+"<br>";
+                        }
+                        $('#data').html(txt);
+        			},
+        		})
+            })
+        </script>
+    </body>
+</html>
