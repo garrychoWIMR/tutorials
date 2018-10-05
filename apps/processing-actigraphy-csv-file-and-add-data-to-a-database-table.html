@@ -11,52 +11,61 @@
             <form id=fm>
                 <input type="file"></a>
                 <br><br>
+                <div id=r></div>
 
 
 
-                <!--data input section start-->
+                <!--data input section start--
                 Serial_No<br><input name=Serial_No /><br>
                 Epoch<br><input name=Epoch /><br>
-                <!--data input section end-->
+                --data input section end-->
 
 
 
 
 
-
+<!--
                 <br><br>
                 <button type=submit>Submit</button>
                 <br><br>
+-->
             </form>
         </div>
         <script>
-            $('#fm').submit(function(event){
-                event.preventDefault();
-                var d={};
-                var a=$("#fm").serializeArray();
-                $.each(a, function () { d[this.name]=this.value || '';});
-                var data={"request":"add_data_2","form-data":d};
-                console.log(data);
-                $.ajax({
-                    headers:{},
-        			type: "POST",
-        			url: "http://172.21.135.21/web/api.aspx",
-        			contentType: "application/json",
-        			charset:"utf-8",
-        			dataType: "json",
-        			error: function(jqXHR,error, errorThrown){ if(jqXHR.status) {alert(jqXHR.responseText);} else {alert("Something went wrong");}},
-        			data: JSON.stringify(data),
-        			success: function(c,textStatus, request){
-                        console.log(c);
-                        alert(c.data)
-        			},
-        		})
-            })
             $('input[type=file]').on('change',function(evt){
                 var file = this.files[0];
-                file_process(file);
+                var records=[{}]
+                file_process(file,records,0,function(){
+                    $('#r').html('');
+                    var txt="";
+                    for(p in records[0]){
+                        txt+="<br>"+p+":"+records[0][p];
+                    }
+                    $('#r').html(txt);
+                    var a=confirm("Do you want to save the data to a database table?");
+                    if(a==true){
+                        var d=records[0];
+                        var data={"request":"add_data_2","form-data":d};
+                        console.log(data);
+                        $.ajax({
+                            headers:{},
+                			type: "POST",
+                            url: "http://api.rt.org.au/web/api.aspx",
+                			contentType: "application/json",
+                			charset:"utf-8",
+                			dataType: "json",
+                			error: function(jqXHR,error, errorThrown){ if(jqXHR.status) {alert(jqXHR.responseText);} else {alert("Something went wrong");}},
+                			data: JSON.stringify(data),
+                			success: function(c,textStatus, request){
+                                console.log(c);
+                                alert(c.data)
+                			},
+                		})
+                    }
+                });
             })
-            var file_process=function(file){
+            //-------------------------------------
+            var file_process=function(file,records,I,callback){
                 var reader = new FileReader();
                 reader.onload = (function(e) {
                     var contents = e.target.result;
@@ -115,26 +124,26 @@
                             case "Initials:":
                                 break;
                             case "Number of Days:":
-                                //                            $('input[name=aTRT]').val(line[1]);
+                            //                            records[I]['aTRT']=line[1];
                                 break;
                             case "Actiwatch Serial Number:":
-                                $('input[name=Serial_No]').val(line[1]);
+                                records[I]['Serial_No']=line[1];
                                     break;
                             case "Epoch Length:":
-                                $('input[name=Epoch]').val(line[1]);
+                                records[I]['Epoch']=line[1];
                                 break;
                             case "Data Collection Start Date:":
-                                $('input[name=start_date]').val(line[1]);
+                                start_date=line[1];
                                 break;
                             case "Data Collection Start Time:":
-                                $('input[name=start_time]').val(line[1]);
+                                start_time=line[1];
                                 break;
                             case "Data Collection End Date:":
-                                $('input[name=end_date]').val(line[1]);
+                                end_date=line[1];
                                 break;
                             case "Data Collection End Time:":
-                                $('input[name=end_time]').val(line[1]);
-                //---                $('input[name=aTRT]')=((date_time_to_ticks(end_date,end_time)-date_time_to_ticks(start_date,start_time))/24/60/60/1000).toFixed(1);
+                                end_time=line[1];
+                                records[I]['aTRT']=((date_time_to_ticks(end_date,end_time)-date_time_to_ticks(start_date,start_time))/24/60/60/1000).toFixed(1);
                                  break;
                             case "Full Name:":
                                 break;
@@ -191,130 +200,127 @@
                                     }
                                 }
                             break;
-                            /*---
                             case "Rest Summary":
                                 switch(line[1]){
                                   case "Average(n)":
-                                    if(duration>0) $('input[name=aTIB]').val(line[duration]).trim();
-                                    if(sleeptime>0) $('input[name=aTST_aTIB]').val(line[sleeptime]).trim();
-                                    if(activitycount>0) $('input[name=SAC]').val(line[activitycount]).trim();
+                                    if(duration>0) records[I]['aTIB']=line[duration].trim();
+                                    if(sleeptime>0) records[I]['aTST_aTIB']=line[sleeptime].trim();
+                                    if(activitycount>0) records[I]['SAC']=line[activitycount].trim();
                                     break;
                                   case "Std Dev(n-1)":
-                                    if(duration>0) $('input[name=aTIB_std]').val(line[duration]).trim();
-                                    if(sleeptime>0) $('input[name=aTST_aTIB_std]').val(line[sleeptime]).trim();
-                                    if(activitycount>0) $('input[name=SAC_std]').val(line[activitycount]).trim();
+                                    if(duration>0) records[I]['aTIB_std']=line[duration].trim();
+                                    if(sleeptime>0) records[I]['aTST_aTIB_std']=line[sleeptime].trim();
+                                    if(activitycount>0) records[I]['SAC_std']=line[activitycount].trim();
                                     break;
                                   case "Minimum(n)":
-                                    if(duration>0) $('input[name=aTIB_min]').val(line[duration]).trim();
-                                    if(sleeptime>0) $('input[name=aTST_aTIB_min]').val(line[sleeptime]).trim();
-                                    if(activitycount>0) $('input[name=SAC_min]').val(line[activitycount]).trim();
+                                    if(duration>0) records[I]['aTIB_min']=line[duration].trim();
+                                    if(sleeptime>0) records[I]['aTST_aTIB_min']=line[sleeptime].trim();
+                                    if(activitycount>0) records[I]['SAC_min']=line[activitycount].trim();
                                     break;
                                   case "Maximum(n)":
-                                    if(duration>0) $('input[name=aTIB_max]').val(line[duration]).trim();
-                                    if(sleeptime>0) $('input[name=aTST_aTIB_max]').val(line[sleeptime]).trim();
-                                    if(activitycount>0) $('input[name=SAC_max]').val(line[activitycount]).trim();
+                                    if(duration>0) records[I]['aTIB_max']=line[duration].trim();
+                                    if(sleeptime>0) records[I]['aTST_aTIB_max']=line[sleeptime].trim();
+                                    if(activitycount>0) records[I]['SAC_max']=line[activitycount].trim();
                                     break;
                                 }
                             break;
-                            */
-                            //                    $('input[name=d_ST_24]')=mean.toFixed(2);
-                            //                    $('input[name=d_ST_24_STD]')=Math.sqrt(sqrs/(days.length-1)).toFixed(2);
-                            //                    $('input[name=AC_24]')=meanac.toFixed(0);
-                            //                    $('input[name=AC_24_STD]')=Math.sqrt(sqrsac/(days.length-1)).toFixed(0);
-                            /*
+                            //                    records[I]['d_ST_24']=mean.toFixed(2);
+                            //                    records[I]['d_ST_24_STD']=Math.sqrt(sqrs/(days.length-1)).toFixed(2);
+                            //                    records[I]['AC_24']=meanac.toFixed(0);
+                            //                    records[I]['AC_24_STD']=Math.sqrt(sqrsac/(days.length-1)).toFixed(0);
+
                             case "Daily Summary":
                                 switch(line[1]){
                                   case "Average(n)":
-                                    if(ac_average>0) $('input[name=AC_24]').val(line[ac_average]).trim();
-                                    if(sleeptime>0) $('input[name=d_ST_24]').val(line[sleeptime]).trim();
+                                    if(ac_average>0) records[I]['AC_24']=line[ac_average].trim();
+                                    if(sleeptime>0) records[I]['d_ST_24']=line[sleeptime].trim();
                                     break;
                                   case "Std Dev(n-1)":
-                                    if(ac_average>0) $('input[name=AC_24_STD]').val(line[ac_average]).trim();
-                                    if(sleeptime>0) $('input[name=d_ST_24_STD]').val(line[sleeptime]).trim();
+                                    if(ac_average>0) records[I]['AC_24_STD']=line[ac_average].trim();
+                                    if(sleeptime>0) records[I]['d_ST_24_STD']=line[sleeptime].trim();
                                     break;
                                 }
                             break;
                             case "Sleep Summary":
                                 switch(line[1]){
                                   case "Average(n)":
-                                    if(sleeptime>0) $('input[name=aTST]').val(line[sleeptime]).trim();
-                                    if(onsetlatency>0) $('input[name=aSOL]').val(line[onsetlatency]).trim();
-                                    if(waso>0) $('input[name=aWASO]').val(line[waso]).trim();
-                                    if(efficiency>0) $('input[name=aSE]').val(line[efficiency]).trim();
-                                    if(sleepbouts>0) $('input[name=SB]').val(line[sleepbouts]).trim();
-                                    if(wakebouts>0) $('input[name=WB]').val(line[wakebouts]).trim();
-                                    if(stdactivitycount>0) $('input[name=SAC_STD]').val(line[stdactivitycount]).trim();
-                                    if(fragmentation>0) $('input[name=FI]').val(line[fragmentation]).trim();
+                                    if(sleeptime>0) records[I]['aTST']=line[sleeptime].trim();
+                                    if(onsetlatency>0) records[I]['aSOL']=line[onsetlatency].trim();
+                                    if(waso>0) records[I]['aWASO']=line[waso].trim();
+                                    if(efficiency>0) records[I]['aSE']=line[efficiency].trim();
+                                    if(sleepbouts>0) records[I]['SB']=line[sleepbouts].trim();
+                                    if(wakebouts>0) records[I]['WB']=line[wakebouts].trim();
+                                    if(stdactivitycount>0) records[I]['SAC_STD']=line[stdactivitycount].trim();
+                                    if(fragmentation>0) records[I]['FI']=line[fragmentation].trim();
                                     break;
                                   case "Std Dev(n-1)":
-                                    if(sleeptime>0) $('input[name=aTST_std]').val(line[sleeptime]).trim();
-                                    if(onsetlatency>0) $('input[name=aSOL_std]').val(line[sleeptime]).trim();
-                                    if(waso>0) $('input[name=aWASO_std]').val(line[waso]).trim();
-                                    if(efficiency>0) $('input[name=aSE_std]').val(line[efficiency]).trim();
-                                    if(sleepbouts>0) $('input[name=SB_std]').val(line[sleepbouts]).trim();
-                                    if(wakebouts>0) $('input[name=WB_std]').val(line[wakebouts]).trim();
-                                    if(stdactivitycount>0) $('input[name=SAC_STD_std]').val(line[stdactivitycount]).trim();
-                                    if(fragmentation>0) $('input[name=FI_std]').val(line[fragmentation]).trim();
+                                    if(sleeptime>0) records[I]['aTST_std']=line[sleeptime].trim();
+                                    if(onsetlatency>0) records[I]['aSOL_std']=line[sleeptime].trim();
+                                    if(waso>0) records[I]['aWASO_std']=line[waso].trim();
+                                    if(efficiency>0) records[I]['aSE_std']=line[efficiency].trim();
+                                    if(sleepbouts>0) records[I]['SB_std']=line[sleepbouts].trim();
+                                    if(wakebouts>0) records[I]['WB_std']=line[wakebouts].trim();
+                                    if(stdactivitycount>0) records[I]['SAC_STD_std']=line[stdactivitycount].trim();
+                                    if(fragmentation>0) records[I]['FI_std']=line[fragmentation].trim();
                                     break;
                                   case "Minimum(n)":
-                                    if(sleeptime>0) $('input[name=aTST_min]').val(line[sleeptime]).trim();
-                                    if(onsetlatency>0) $('input[name=aSOL_min]').val(line[sleeptime]).trim();
-                                    if(waso>0) $('input[name=aWASO_min]').val(line[waso]).trim();
-                                    if(efficiency>0) $('input[name=aSE_min]').val(line[efficiency]).trim();
-                                    if(sleepbouts>0) $('input[name=SB_min]').val(line[sleepbouts]).trim();
-                                    if(wakebouts>0) $('input[name=WB_min]').val(line[wakebouts]).trim();
-                                    if(stdactivitycount>0) $('input[name=SAC_STD_min]').val(line[stdactivitycount]).trim();
-                                    if(fragmentation>0) $('input[name=FI_min]').val(line[fragmentation]).trim();
+                                    if(sleeptime>0) records[I]['aTST_min']=line[sleeptime].trim();
+                                    if(onsetlatency>0) records[I]['aSOL_min']=line[sleeptime].trim();
+                                    if(waso>0) records[I]['aWASO_min']=line[waso].trim();
+                                    if(efficiency>0) records[I]['aSE_min']=line[efficiency].trim();
+                                    if(sleepbouts>0) records[I]['SB_min']=line[sleepbouts].trim();
+                                    if(wakebouts>0) records[I]['WB_min']=line[wakebouts].trim();
+                                    if(stdactivitycount>0) records[I]['SAC_STD_min']=line[stdactivitycount].trim();
+                                    if(fragmentation>0) records[I]['FI_min']=line[fragmentation].trim();
                                     break;
                                   case "Maximum(n)":
-                                    if(sleeptime>0) $('input[name=aTST_max]').val(line[sleeptime]).trim();
-                                    if(onsetlatency>0) $('input[name=aSOL_max]').val(line[sleeptime]).trim();
-                                    if(waso>0) $('input[name=aWASO_max]').val(line[waso]).trim();
-                                    if(efficiency>0) $('input[name=aSE_max]').val(line[efficiency]).trim();
-                                    if(sleepbouts>0) $('input[name=SB_max]').val(line[sleepbouts]).trim();
-                                    if(wakebouts>0) $('input[name=WB_max]').val(line[wakebouts]).trim();
-                                    if(stdactivitycount>0) $('input[name=SAC_STD_max]').val(line[stdactivitycount]).trim();
-                                    if(fragmentation>0) $('input[name=FI_max]').val(line[fragmentation]).trim();
+                                    if(sleeptime>0) records[I]['aTST_max']=line[sleeptime].trim();
+                                    if(onsetlatency>0) records[I]['aSOL_max']=line[sleeptime].trim();
+                                    if(waso>0) records[I]['aWASO_max']=line[waso].trim();
+                                    if(efficiency>0) records[I]['aSE_max']=line[efficiency].trim();
+                                    if(sleepbouts>0) records[I]['SB_max']=line[sleepbouts].trim();
+                                    if(wakebouts>0) records[I]['WB_max']=line[wakebouts].trim();
+                                    if(stdactivitycount>0) records[I]['SAC_STD_max']=line[stdactivitycount].trim();
+                                    if(fragmentation>0) records[I]['FI_max']=line[fragmentation].trim();
                                     break;
                                 }
                             break;
                             case "Custom Summary":
                                 switch(line[1]){
                                   case "n":
-                                    if(duration>0 && line[duration].trim()!=='NaN') $('input[name=Naps_no]').val(line[duration]).trim();
+                                    if(duration>0 && line[duration].trim()!=='NaN') records[I]['Naps_no']=line[duration].trim();
                                     break;
                                   case "Average(n)":
-                                    if(duration>0 && line[duration].trim()!=='NaN') $('input[name=Naps]').val(line[duration]).trim();
+                                    if(duration>0 && line[duration].trim()!=='NaN') records[I]['Naps']=line[duration].trim();
                                     break;
                                   case "Std Dev(n-1)":
-                                    if(duration>0 && line[duration].trim()!=='NaN') $('input[name=Naps_std]').val(line[duration]).trim();
+                                    if(duration>0 && line[duration].trim()!=='NaN') records[I]['Naps_std']=line[duration].trim();
                                     break;
                                   case "Minimum(n)":
-                                    if(duration>0 && line[duration].trim()!=='NaN') $('input[name=Naps_min]').val(line[duration]).trim();
+                                    if(duration>0 && line[duration].trim()!=='NaN') records[I]['Naps_min']=line[duration].trim();
                                     break;
                                   case "Maximum(n)":
-                                    if(duration>0 && line[duration].trim()!=='NaN') $('input[name=Naps_max]').val(line[duration]).trim();
+                                    if(duration>0 && line[duration].trim()!=='NaN') records[I]['Naps_max']=line[duration].trim();
                                     break;
                                 }
                             break;
-
                             case "Active Summary":
                                 switch(line[1]){
                                   case "Average(n)":
-                                    if(activitycount>0) $('input[name=WAC]').val(line[activitycount]).trim();
-                                    if(stdactivitycount>0) $('input[name=WAC_STD]').val(line[stdactivitycount]).trim();
+                                    if(activitycount>0) records[I]['WAC']=line[activitycount].trim();
+                                    if(stdactivitycount>0) records[I]['WAC_STD']=line[stdactivitycount].trim();
                                     break;
                                   case "Std Dev(n-1)":
-                                    if(activitycount>0) $('input[name=WAC_std]').val(line[activitycount]).trim();
-                                    if(stdactivitycount>0) $('input[name=WAC_STD_std]').val(line[stdactivitycount]).trim();
+                                    if(activitycount>0) records[I]['WAC_std']=line[activitycount].trim();
+                                    if(stdactivitycount>0) records[I]['WAC_STD_std']=line[stdactivitycount].trim();
                                     break;
                                   case "Minimum(n)":
-                                    if(activitycount>0) $('input[name=WAC_min]').val(line[activitycount]).trim();
-                                    if(stdactivitycount>0) $('input[name=WAC_STD_min]').val(line[stdactivitycount]).trim();
+                                    if(activitycount>0) records[I]['WAC_min']=line[activitycount].trim();
+                                    if(stdactivitycount>0) records[I]['WAC_STD_min']=line[stdactivitycount].trim();
                                     break;
                                   case "Maximum(n)":
-                                    if(activitycount>0) $('input[name=WAC_max]').val(line[activitycount]).trim();
-                                    if(stdactivitycount>0) $('input[name=WAC_STD_max]').val(line[stdactivitycount]).trim();
+                                    if(activitycount>0) records[I]['WAC_max']=line[activitycount].trim();
+                                    if(stdactivitycount>0) records[I]['WAC_STD_max']=line[stdactivitycount].trim();
                                     break;
                                 }
                             break;
@@ -322,17 +328,17 @@
                                     if(line[1]=="1" || line[1]=="2" || line[1]=="3" || line[1]=="4" || line[1]=="5"
                                     || line[1]=="6"|| line[1]=="7"|| line[1]=="8"|| line[1]=="9"|| line[1]=="10"
                                     || line[1]=="11"|| line[1]=="12"|| line[1]=="13"|| line[1]=="14"|| line[1]=="15"){
-                                        if(startdate>0 && line[startdate].trim()!=='NaN') $('input[name=Date_Rest_'+line[1]].val(line[startdate]).trim();
-                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') $('input[name=SAC_'+line[1]].val(line[activitycount]).trim();
-                                        if(starttime>0) $('input[name=Bedtime_'+line[1]].val(line[starttime]).trim();
-                                        if(endtime>0) $('input[name=Risetime_'+line[1]].val(line[endtime]).trim();
-                                        if(duration>0) $('input[name=aTIB_'+line[1]].val(line[duration]).trim();
-                                        if(sleeptime>0) $('input[name=aTST_aTIB_'+line[1]].val(line[sleeptime]).trim();
+                                        if(startdate>0 && line[startdate].trim()!=='NaN') records[I]['Date_Rest_'+line[1]]=line[startdate].trim();
+                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') records[I]['SAC_'+line[1]]=line[activitycount].trim();
+                                        if(starttime>0) records[I]['Bedtime_'+line[1]]=line[starttime].trim();
+                                        if(endtime>0) records[I]['Risetime_'+line[1]]=line[endtime].trim();
+                                        if(duration>0) records[I]['aTIB_'+line[1]]=line[duration].trim();
+                                        if(sleeptime>0) records[I]['aTST_aTIB_'+line[1]]=line[sleeptime].trim();
                                         var sd='01/01/2011 ';
                                         var sdr='01/01/2011 ';
                                         if(starttime>0 && endtime>0){
-                                            var a.val(line[starttime]).trim();
-                                            var ar.val(line[endtime]).trim();
+                                            var a=line[starttime].trim();
+                                            var ar=line[endtime].trim();
                                             var t24='';
                                             var t24r='';
                                             if (a.indexOf("PM") > -1)
@@ -403,9 +409,9 @@
                                     if(line[1]=="1" || line[1]=="2" || line[1]=="3" || line[1]=="4" || line[1]=="5"
                                     || line[1]=="6"|| line[1]=="7"|| line[1]=="8"|| line[1]=="9"|| line[1]=="10"
                                     || line[1]=="11"|| line[1]=="12"|| line[1]=="13"|| line[1]=="14"|| line[1]=="15"){
-                                        if(startdate>0 && line[startdate].trim()!=='NaN') $('input[name=Date_Active_'+line[1]].val(line[startdate]).trim();
-                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') $('input[name=WAC_'+line[1]].val(line[activitycount]).trim();
-                                        if(activitycount>0 && line[activitycount].trim()!=='NaN' && ac_average>0 && line[ac_average].trim()!=='NaN') $('input[name=Dur_Active_'+line[1]]=(parseFloat(line[activitycount].trim())/parseFloat(line[ac_average].trim())).toFixed(1);
+                                        if(startdate>0 && line[startdate].trim()!=='NaN') records[I]['Date_Active_'+line[1]]=line[startdate].trim();
+                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') records[I]['WAC_'+line[1]]=line[activitycount].trim();
+                                        if(activitycount>0 && line[activitycount].trim()!=='NaN' && ac_average>0 && line[ac_average].trim()!=='NaN') records[I]['Dur_Active_'+line[1]]=(parseFloat(line[activitycount].trim())/parseFloat(line[ac_average].trim())).toFixed(1);
                                     }
                             break;
                             case "SLEEP*":
@@ -413,28 +419,28 @@
                                     if(line[1]=="1" || line[1]=="2" || line[1]=="3" || line[1]=="4" || line[1]=="5"
                                     || line[1]=="6"|| line[1]=="7"|| line[1]=="8"|| line[1]=="9"|| line[1]=="10"
                                     || line[1]=="11"|| line[1]=="12"|| line[1]=="13"|| line[1]=="14"|| line[1]=="15"){
-                                        if(startdate>0 && line[startdate].trim()!=='NaN') $('input[name=Date_Sleep_'+line[1]].val(line[startdate]).trim();
-                                        if(sleeptime>0 && line[sleeptime].trim()!=='NaN') $('input[name=aTST_'+line[1]].val(line[sleeptime]).trim();
-                                        if(onsetlatency>0 && line[onsetlatency].trim()!=='NaN') $('input[name=aSOL_'+line[1]].val(line[onsetlatency]).trim();
-                                        if(waso>0 && line[waso].trim()!=='NaN') $('input[name=aWASO_'+line[1]].val(line[waso]).trim();
-                                        if(fragmentation>0 && line[fragmentation].trim()!=='NaN') $('input[name=FI_'+line[1]].val(line[fragmentation]).trim();
+                                        if(startdate>0 && line[startdate].trim()!=='NaN') records[I]['Date_Sleep_'+line[1]]=line[startdate].trim();
+                                        if(sleeptime>0 && line[sleeptime].trim()!=='NaN') records[I]['aTST_'+line[1]]=line[sleeptime].trim();
+                                        if(onsetlatency>0 && line[onsetlatency].trim()!=='NaN') records[I]['aSOL_'+line[1]]=line[onsetlatency].trim();
+                                        if(waso>0 && line[waso].trim()!=='NaN') records[I]['aWASO_'+line[1]]=line[waso].trim();
+                                        if(fragmentation>0 && line[fragmentation].trim()!=='NaN') records[I]['FI_'+line[1]]=line[fragmentation].trim();
                                     }
                             break;
                             case "DAILY":
                                     if(line[1]=="1" || line[1]=="2" || line[1]=="3" || line[1]=="4" || line[1]=="5"
                                     || line[1]=="6"|| line[1]=="7"|| line[1]=="8"|| line[1]=="9"|| line[1]=="10"
                                     || line[1]=="11"|| line[1]=="12"|| line[1]=="13"|| line[1]=="14"|| line[1]=="15"){
-                                        if(startdate>0 && line[startdate].trim()!=='NaN') $('input[name=Date_Daily_'+line[1]].val(line[startdate]).trim();
-                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') $('input[name=AC_24_'+line[1]].val(line[activitycount]).trim();
+                                        if(startdate>0 && line[startdate].trim()!=='NaN') records[I]['Date_Daily_'+line[1]]=line[startdate].trim();
+                                        if(activitycount>0 && line[activitycount].trim()!=='NaN') records[I]['AC_24_'+line[1]]=line[activitycount].trim();
                                         if(sleeptime>0 && line[sleeptime].trim()!=='NaN') {
-                                            $('input[name=d_ST_24_'+line[1]].val(line[sleeptime]).trim();
+                                            records[I]['d_ST_24_'+line[1]]=line[sleeptime].trim();
                                             if(line[activitycount]!=='0' && line[ac_average]!=='0'){
                                                 sleep_time[sleep_time.length]=parseFloat(line[sleeptime].trim())/(parseFloat(line[activitycount].trim())/parseFloat(line[ac_average].trim()))*1440;
                                             }
                                             else sleep_time[sleep_time.length]=0;
                                         }
-                                        if(activitycount>0 && line[activitycount].trim()!=='NaN' && line[activitycount].trim()!=='0' && ac_average>0 && line[ac_average].trim()!=='NaN' && line[ac_average].trim()!=='0') $('input[name=Dur_24_'+line[1]]=(parseFloat(line[activitycount].trim())/parseFloat(line[ac_average].trim())).toFixed(1);
-                                        //else $('input[name=Dur_24_'+line[1]]='0';
+                                        if(activitycount>0 && line[activitycount].trim()!=='NaN' && line[activitycount].trim()!=='0' && ac_average>0 && line[ac_average].trim()!=='NaN' && line[ac_average].trim()!=='0') records[I]['Dur_24_'+line[1]]=(parseFloat(line[activitycount].trim())/parseFloat(line[ac_average].trim())).toFixed(1);
+                                        //else records[I]['Dur_24_'+line[1]]='0';
 
                                     }
                             break;
@@ -445,38 +451,36 @@
                                         totalexcluded+=ed-sd;
                                    }
                             break;
-                            */
                             }
                         }
-                        /*----------
-                        $('input[name=aBedtime]')=bedtimeavg;
-                        $('input[name=aRisetime]')=risetimeavg;
-                        $('input[name=aExcl]')=(totalexcluded/24/60/60/1000).toFixed(2);
-                        $('input[name=Bedtime_min]')=bedtimeminstr;
-                        $('input[name=Bedtime_max]')=bedtimemaxstr;
-                        $('input[name=Risetime_min]')=risetimeminstr;
-                        $('input[name=Risetime_max]')=risetimemaxstr;
+                        records[I]['aBedtime']=bedtimeavg;
+                        records[I]['aRisetime']=risetimeavg;
+                        records[I]['aExcl']=(totalexcluded/24/60/60/1000).toFixed(2);
+                        records[I]['Bedtime_min']=bedtimeminstr;
+                        records[I]['Bedtime_max']=bedtimemaxstr;
+                        records[I]['Risetime_min']=risetimeminstr;
+                        records[I]['Risetime_max']=risetimemaxstr;
+
                         var total=0;
                         for (var i = 0; i < sleep_time.length; i++) {
-                            total += sleep_time[i]);
+                            total += sleep_time[i];
                         }
                         var mean=total/sleep_time.length;
                         var sqrs=0;
                         for (var i = 0; i < sleep_time.length; i++) {
                             sqrs += Math.pow(sleep_time[i]-mean,2);
                         }
-                        $('input[name=d_ST_24]')=mean.toFixed(2);
-                        $('input[name=d_ST_24_STD]')=Math.sqrt(sqrs/(sleep_time.length-1)).toFixed(2);
-                        */
+                        records[I]['d_ST_24']=mean.toFixed(2);
+                        records[I]['d_ST_24_STD']=Math.sqrt(sqrs/(sleep_time.length-1)).toFixed(2);
                   }
-                  /*
-                  for (var property in $('input[name=]')) {
-                      if($('input[name=]')[property]!==undefined && $('input[name=]')[property]!==null){
-                          $('input[name=]')[property]=$('input[name=]')[property].toString();
+
+                  for (var property in records[I]) {
+                      if(records[I][property]!==undefined && records[I][property]!==null){
+                          records[I][property]=records[I][property].toString();
                       }
                   }
-                  */
                   if(ac_average==0) alert("Standard Woolcock Actiware analysis hasn't been use so some outputs are missing. Please re-analyse the file.")
+                  callback();
                 });
                 reader.readAsText(file);
             }

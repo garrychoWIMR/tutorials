@@ -32,32 +32,11 @@
             </form>
         </div>
         <script>
-            $('#fm').submit(function(event){
-                event.preventDefault();
-                var d={};
-                var a=$("#fm").serializeArray();
-                $.each(a, function () { d[this.name]=this.value || '';});
-                var data={"request":"add_data_2","form-data":d};
-                console.log(data);
-                $.ajax({
-                    headers:{},
-        			type: "POST",
-        			url: "http://172.21.135.21/web/api.aspx",
-        			contentType: "application/json",
-        			charset:"utf-8",
-        			dataType: "json",
-        			error: function(jqXHR,error, errorThrown){ if(jqXHR.status) {alert(jqXHR.responseText);} else {alert("Something went wrong");}},
-        			data: JSON.stringify(data),
-        			success: function(c,textStatus, request){
-                        console.log(c);
-                        alert(c.data)
-        			},
-        		})
-            })
             $('input[type=file]').on('change',function(evt){
                 var file = this.files[0];
                 var records=[{}]
                 file_process(file,records,0,function(){
+                    $('#r').html('');
                     var txt="";
                     for(p in records[0]){
                         txt+="<br>"+p+":"+records[0][p];
